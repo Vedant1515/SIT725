@@ -1,29 +1,58 @@
-var express = require("express")
-var app = express()
-var port = process.env.port || 3000;
-app.listen(port,()=>{
-console.log("App listening to: "+port)
-})
-var express = require("express");
-const path = require('path'); // Make sure to include this
-var app = express();
-var port = process.env.port || 3003;
- 
-app.use(express.static(path.join(__dirname, 'public')));
- 
-app.get('/add', (req, res) => {
-  const a = parseFloat(req.query.a);
-  const b = parseFloat(req.query.b);
-  
-  if (isNaN(a) || isNaN(b)) {
-    return res.send("Error: Please provide valid numbers using query parameters 'a' and 'b'.");
-  }
-  
-  const sum = a + b;
-  res.send(`The sum of ${a} and ${b} is: ${sum}`);
+const express = require('express');
+const app = express();
+const port = 3000;
+
+const path = require('path');
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
- 
-// Start the server
+
+app.use(express.json());
+
+app.get('/add', (req, res) => {
+    const num1 = parseFloat(req.query.num1);
+    const num2 = parseFloat(req.query.num2);
+    
+    if (isNaN(num1) || isNaN(num2)) {
+        return res.status(400).json({ error: 'Invalid numbers provided' });
+    }
+    
+    const result = num1 + num2;
+    res.json({ result });
+});
+
+app.post('/calculate', (req, res) => {
+    const { num1, num2, operation } = req.body;
+    
+    if (isNaN(num1) || isNaN(num2)) {
+        return res.status(400).json({ error: 'Invalid numbers provided' });
+    }
+
+    let result;
+    switch (operation) {
+        case 'add':
+            result = num1 + num2;
+            break;
+        case 'subtract':
+            result = num1 - num2;
+            break;
+        case 'multiply':
+            result = num1 * num2;
+            break;
+        case 'divide':
+            if (num2 === 0) {
+                return res.status(400).json({ error: 'Cannot divide by zero' });
+            }
+            result = num1 / num2;
+            break;
+        default:
+            return res.status(400).json({ error: 'Invalid operation' });
+    }
+    
+    res.json({ result });
+});
+
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server running at http://localhost:${port}`);
 });
