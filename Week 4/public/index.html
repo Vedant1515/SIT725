@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Gallery</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="teal">
+    <div class="nav-wrapper container">
+      <a href="#" class="brand-logo">Project Gallery</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Add Project Form -->
+    <div class="row">
+      <form id="projectForm" class="col s12">
+        <div class="row">
+          <div class="input-field col s12 m6">
+            <input id="projectTitle" type="text" class="validate" required>
+            <label for="projectTitle">Project Title*</label>
+          </div>
+          <div class="input-field col s12 m6">
+            <input id="projectLink" type="text" class="validate">
+            <label for="projectLink">Project Link</label>
+          </div>
+          <div class="input-field col s12">
+            <textarea id="projectDescription" class="materialize-textarea"></textarea>
+            <label for="projectDescription">Description</label>
+          </div>
+          <div class="col s12">
+            <button type="submit" class="btn waves-effect waves-light teal">
+              Add Project
+              <i class="material-icons right">add</i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Projects Container -->
+    <div class="row" id="projectsContainer">
+      <!-- Projects will be loaded here -->
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
