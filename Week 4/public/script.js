@@ -1,112 +1,155 @@
+const API_URL = 'http://localhost:3001/api/projects';
+
 document.addEventListener('DOMContentLoaded', function() {
-  const API_URL = 'http://localhost:3001/api/projects';
-  const form = document.getElementById('projectForm');
-
-  // Load projects on startup
+  M.AutoInit();
   loadProjects();
-
-  // Form submission
-  form.addEventListener('submit', async (e) => {
+  
+  document.getElementById('projectForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const form = e.target;
     const title = form.projectTitle.value.trim();
+    const imageUrl = form.projectImageUrl.value.trim();
     const description = form.projectDescription.value.trim();
-    const link = form.projectLink.value.trim();
-
-    if (!title) {
-      alert('Project title is required!');
+    
+    if (!title || !imageUrl) {
+      M.toast({html: 'Title and Image URL are required', classes: 'red'});
       return;
     }
 
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, link })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          imageUrl,
+          description
+        })
       });
-
-      if (!response.ok) throw new Error('Failed to add project');
+      
+      const result = await response.json();
+      
+      if (!response.ok) throw new Error(result.error || 'Failed to add project');
+      
+      M.toast({html: 'Project added!', classes: 'green'});
       form.reset();
-      loadProjects(); // Refresh the list
+      loadProjects();
     } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to add project. See console for details.');
+      M.toast({html: `Error: ${error.message}`, classes: 'red'});
     }
   });
 });
 
 async function loadProjects() {
-  const container = document.getElementById('projectsContainer');
   try {
-    const response = await fetch('http://localhost:3001/api/projects');
+    const response = await fetch(API_URL);
     const projects = await response.json();
     
-    container.innerHTML = projects.map(project => `
-      <div class="col s12 m6 l4">
-        <div class="card">
-          <div class="card-image">
-            <img src="${project.imageUrl}" alt="${project.title}">
-            <span class="card-title">${project.title}</span>
-          </div>
-          <div class="card-content">
-            <p>${project.description || 'No description'}</p>
-          </div>
-          <div class="card-action">
-            ${project.link ? `<a href="${project.link}" target="_blank">View</a>` : ''}
-            <a href="#" class="red-text delete-btn" data-id="${project._id}">Delete</a>
+    const container = document.getElementById('projectsContainer');
+    container.innerHTML = '';
+    
+    if (projects.length === 0) {
+      container.innerHTML = `
+        <div class="col s12 center-align">
+          <div class="card-panel teal lighten-2 white-text">
+            <i class="material-icons large">info</i>
+            <h5>No Projects Found</h5>
+            <p>Add your first project using the form above</p>
           </div>
         </div>
-      </div>
-    `).join('');
-
-    // Add delete button handlers
-    // Update the delete button event listener in your loadProjects function
-document.querySelectorAll('.delete-btn').forEach(btn => {
-  btn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const projectId = btn.dataset.id;
+      `;
+      return;
+    }
     
-    if (!confirm('Are you sure you want to delete this project?')) return;
-    
-    try {
-      const response = await fetch(`http://localhost:3001/api/projects/${projectId}`, {
-        method: 'DELETE'
+    projects.forEach(project => {
+      const col = document.createElement('div');
+      col.className = 'col s12 m6 l4';
+      col.innerHTML = `
+        <div class="card project-card">
+          <div class="card-image">
+            <img class="project-image" src="${project.imageUrl}" 
+                 alt="${project.title}" 
+                 onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'">
+            <div class="card-title-wrapper">
+              <span class="card-title">${project.title}</span>
+              ${project.description ? `<p class="card-description">${project.description.substring(0, 60)}${project.description.length > 60 ? '...' : ''}</p>` : ''}
+            </div>
+          </div>
+          <div class="card-content">
+            <h5>${project.title}</h5>
+            <p>${project.description || 'No description available'}</p>
+          </div>
+          <div class="card-action">
+            <a href="#" class="view-details-btn">
+              <i class="material-icons tiny">info</i> View Details
+            </a>
+            <a href="#" class="delete-btn" data-id="${project._id}">
+              <i class="material-icons tiny">delete</i> Delete
+            </a>
+          </div>
+        </div>
+      `;
+      
+      // View Details Toggle
+      col.querySelector('.view-details-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const card = this.closest('.project-card');
+        const cardImage = card.querySelector('.card-image');
+        const cardContent = card.querySelector('.card-content');
+        const btnIcon = this.querySelector('i');
+        const btnText = this;
+        
+        if (cardContent.style.display === 'none' || !cardContent.style.display) {
+          cardImage.style.display = 'none';
+          cardContent.style.display = 'block';
+          btnIcon.textContent = 'arrow_back';
+          btnText.innerHTML = '<i class="material-icons tiny">arrow_back</i> Back to Image';
+        } else {
+          cardImage.style.display = 'block';
+          cardContent.style.display = 'none';
+          btnIcon.textContent = 'info';
+          btnText.innerHTML = '<i class="material-icons tiny">info</i> View Details';
+        }
       });
       
-      const result = await response.json();
+      // Delete Project
+      col.querySelector('.delete-btn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to delete this project?')) return;
+        
+        try {
+          const response = await fetch(`${API_URL}/${project._id}`, {
+            method: 'DELETE'
+          });
+          
+          if (!response.ok) throw new Error('Failed to delete project');
+          
+          M.toast({html: 'Project deleted!', classes: 'green'});
+          col.remove();
+          
+          if (!container.querySelector('.col.s12.m6.l4')) {
+            container.innerHTML = `
+              <div class="col s12 center-align">
+                <div class="card-panel teal lighten-2 white-text">
+                  <i class="material-icons large">info</i>
+                  <h5>No Projects Found</h5>
+                  <p>Add your first project using the form above</p>
+                </div>
+              </div>
+            `;
+          }
+        } catch (error) {
+          M.toast({html: `Delete failed: ${error.message}`, classes: 'red'});
+        }
+      });
       
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete project');
-      }
-      
-      M.toast({html: 'Project deleted!', classes: 'green'});
-      
-      // Remove the card from the DOM immediately
-      btn.closest('.col').remove();
-      
-      // Show empty state if no projects left
-      if (document.querySelectorAll('.project-card').length === 0) {
-        displayEmptyState();
-      }
-      
-    } catch (error) {
-      console.error('Delete error:', error);
-      M.toast({html: `Delete failed: ${error.message}`, classes: 'red'});
-    }
-  });
-});
+      container.appendChild(col);
+    });
   } catch (error) {
-    container.innerHTML = `<div class="center-align red-text">Error loading projects: ${error.message}</div>`;
+    console.error('Error:', error);
+    M.toast({html: `Error loading projects: ${error.message}`, classes: 'red'});
   }
-}
-function displayEmptyState() {
-  const container = document.getElementById('projectsContainer');
-  container.innerHTML = `
-    <div class="col s12 center-align">
-      <div class="card-panel teal lighten-2 white-text">
-        <i class="material-icons large">info</i>
-        <h5>No Projects Found</h5>
-        <p>Click the "Add Project" button to create your first project.</p>
-      </div>
-    </div>
-  `;
 }

@@ -1,0 +1,124 @@
+import sys
+from typing import NewType, Dict, Set, List, Optional
+
+SatelliteId = NewType("SatelliteId", int)
+
+def on_satellite_reported_back(satellite_id: SatelliteId) -> None:
+    print(f"SatelliteReportedBack: {satellite_id}")
+
+def err_duplicate_satellite(satellite_id: SatelliteId) -> None:
+    print(f"E1: {satellite_id}")
+
+def err_invalid_satellite(satellite_id: SatelliteId) -> None:
+    print(f"E2: {satellite_id}")
+
+class SatelliteNetwork:
+    def __init__(self):
+        # Track connected satellites
+        self.satellites: Set[SatelliteId] = set()
+        
+        # Track relationships between satellites (two-way connections)
+        self.connections: Dict[SatelliteId, Set[SatelliteId]] = {}
+        
+        # Track which satellites have been notified of a message
+        self.notified_satellites: Set[SatelliteId] = set()
+        
+        # Track message propagation
+        self.message_propagation: Dict[SatelliteId, List[SatelliteId]] = {}
+
+    def satellite_connected(self, satellite_id: SatelliteId) -> None:
+        # Check if satellite is already connected
+        if satellite_id in self.satellites:
+            err_duplicate_satellite(satellite_id)
+            return
+        
+        # Add satellite to connected satellites
+        self.satellites.add(satellite_id)
+        
+        # Initialize connections for this satellite
+        self.connections[satellite_id] = set()
+
+    def relationship_established(self, satellite_id1: SatelliteId, satellite_id2: SatelliteId) -> None:
+        # Validate both satellites exist
+        if satellite_id1 not in self.satellites:
+            err_invalid_satellite(satellite_id1)
+            return
+        if satellite_id2 not in self.satellites:
+            err_invalid_satellite(satellite_id2)
+            return
+        
+        # Establish two-way connection
+        self.connections[satellite_id1].add(satellite_id2)
+        self.connections[satellite_id2].add(satellite_id1)
+
+    def message_received(self, satellite_ids: list[SatelliteId]) -> None:
+        # Reset message tracking for this message
+        self.notified_satellites.clear()
+        self.message_propagation.clear()
+        
+        # Process message for each initially notified satellite
+        for satellite_id in satellite_ids:
+            if satellite_id not in self.satellites:
+                err_invalid_satellite(satellite_id)
+                continue
+            
+            self._process_message(satellite_id)
+        
+        # Sort and report back satellites
+        sorted_satellites = sorted(self.notified_satellites, key=lambda x: x)
+        for sat in sorted_satellites:
+            on_satellite_reported_back(sat)
+
+    def _process_message(self, satellite_id: SatelliteId) -> None:
+        # Avoid processing same satellite twice
+        if satellite_id in self.notified_satellites:
+            return
+        
+        # Mark satellite as notified
+        self.notified_satellites.add(satellite_id)
+        
+        # Forward message to unnotified connections in increasing order
+        unnotified_connections = sorted(
+            [conn for conn in self.connections.get(satellite_id, []) 
+             if conn not in self.notified_satellites]
+        )
+        
+        # Track message propagation
+        self.message_propagation[satellite_id] = unnotified_connections
+        
+        # Recursively process each connection
+        for connection in unnotified_connections:
+            self._process_message(connection)
+
+def main():
+    network = SatelliteNetwork()
+
+    no_commands = input()
+
+    for _ in range(int(no_commands)):
+        try:
+            line = input()
+        except EOFError:
+            sys.exit(0)
+
+        parameters = line.split()
+        keyword = parameters[0]
+        args = [int(i) for i in parameters[1:]]
+
+        if keyword == "SatelliteConnected":
+            assert len(args) == 1
+            network.satellite_connected(SatelliteId(args[0]))
+        elif keyword == "RelationshipEstablished":
+            assert len(args) == 2
+            network.relationship_established(SatelliteId(args[0]), SatelliteId(args[1]))
+        elif keyword == "MessageReceived":
+            argc = args[0]
+            args = [SatelliteId(i) for i in args[1:]]
+            assert argc == len(args)
+            network.message_received(args)
+        else:
+            print(f"Malformed input! {keyword}", file=sys.stderr)
+            sys.exit(-1)
+
+if __name__ == "__main__":
+    main()

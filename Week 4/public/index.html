@@ -16,7 +16,6 @@
   </nav>
 
   <div class="container">
-    <!-- Add Project Form -->
     <div class="row">
       <form id="projectForm" class="col s12">
         <div class="row">
@@ -25,8 +24,8 @@
             <label for="projectTitle">Project Title*</label>
           </div>
           <div class="input-field col s12 m6">
-            <input id="projectLink" type="text" class="validate">
-            <label for="projectLink">Project Link</label>
+            <input id="projectImageUrl" type="text" class="validate" required>
+            <label for="projectImageUrl">Image URL*</label>
           </div>
           <div class="input-field col s12">
             <textarea id="projectDescription" class="materialize-textarea"></textarea>
@@ -42,9 +41,7 @@
       </form>
     </div>
 
-    <!-- Projects Container -->
     <div class="row" id="projectsContainer">
-      <!-- Projects will be loaded here -->
     </div>
   </div>
 
