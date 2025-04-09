@@ -93,7 +93,7 @@ async function loadProjects() {
         </div>
       `;
       
-      // View Details Toggle
+      // Details Toggle
       col.querySelector('.view-details-btn').addEventListener('click', function(e) {
         e.preventDefault();
         const card = this.closest('.project-card');

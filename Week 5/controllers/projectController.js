@@ -1,8 +1,8 @@
 const Project = require('../models/Project');
 
-// Controller methods
+// Controller method
 const projectController = {
-  // Get all projects
+  
   getAllProjects: async (req, res) => {
     try {
       const projects = await Project.find();
@@ -12,7 +12,7 @@ const projectController = {
     }
   },
 
-  // Create a new project
+  // new project
   createProject: async (req, res) => {
     try {
       const project = new Project(req.body);
@@ -23,7 +23,7 @@ const projectController = {
     }
   },
 
-  // Delete a project
+  // delete a project
   deleteProject: async (req, res) => {
     try {
       const deletedProject = await Project.findByIdAndDelete(req.params.id);
