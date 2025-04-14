@@ -1,7 +1,8 @@
-import Project from '../models/Project.js';
+const Project = require('../models/Project');
 
+// Controller method
 const projectController = {
-  // Get all projects
+  
   getAllProjects: async (req, res) => {
     try {
       const projects = await Project.find();
@@ -11,7 +12,7 @@ const projectController = {
     }
   },
 
-  // Create a new project
+  // new project
   createProject: async (req, res) => {
     try {
       const project = new Project(req.body);
@@ -22,13 +23,11 @@ const projectController = {
     }
   },
 
-  // Delete a project
+  // delete a project
   deleteProject: async (req, res) => {
     try {
       const deletedProject = await Project.findByIdAndDelete(req.params.id);
-      if (!deletedProject) {
-        return res.status(404).json({ error: 'Project not found' });
-      }
+      if (!deletedProject) return res.status(404).json({ error: 'Project not found' });
       res.json({ message: 'Project deleted successfully' });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -36,4 +35,4 @@ const projectController = {
   }
 };
 
-export default projectController;
+module.exports = projectController;

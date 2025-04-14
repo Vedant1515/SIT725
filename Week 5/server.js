@@ -1,21 +1,17 @@
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import connectDB from './config/database.js';
-import projectRoutes from './routes/projectRoutes.js';
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const connectDB = require('./config/database');
+const projectRoutes = require('./routes/projectRoutes');
 
 const app = express();
+
 connectDB();
 
 app.use(cors());
 app.use(express.json());
-
-// __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/api', projectRoutes);
 
 app.get('/', (req, res) => {
@@ -24,6 +20,3 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-// Export for testing
-export default app;
